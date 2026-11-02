@@ -32,6 +32,17 @@ export class World {
     sun.position.set(5, 10, 5);
     sun.castShadow = true;
 
+    // Default shadow frustum is only 10x10, too small to cover the whole
+    // ground, so the shadow vanishes once the character nears the edges.
+    const shadowExtent = GROUND_SIZE / 2;
+    sun.shadow.camera.left = -shadowExtent;
+    sun.shadow.camera.right = shadowExtent;
+    sun.shadow.camera.top = shadowExtent;
+    sun.shadow.camera.bottom = -shadowExtent;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 30;
+    sun.shadow.mapSize.set(2048, 2048);
+
     group.add(ambient, sun);
 
     return group;
