@@ -28,11 +28,23 @@ export class Game {
       100
     );
 
-    // Static top-down view, looking straight down at the scene.
-    camera.position.set(0, 14, 10);
+    // Offset kept constant from the character so the view follows it.
+    this.cameraOffset = new THREE.Vector3(0, 14, 10);
+    camera.position.copy(this.cameraOffset);
     camera.lookAt(0, 0, 0);
 
     return camera;
+  }
+
+  #updateCamera() {
+    const target = this.character.mesh.position;
+
+    this.camera.position.set(
+      target.x + this.cameraOffset.x,
+      target.y + this.cameraOffset.y,
+      target.z + this.cameraOffset.z
+    );
+    this.camera.lookAt(target);
   }
 
   #createRenderer(container) {
@@ -59,6 +71,7 @@ export class Game {
     const delta = this.clock.getDelta();
 
     this.character.update(delta, this.input.getMoveVector());
+    this.#updateCamera();
 
     this.renderer.render(this.scene, this.camera);
   }
