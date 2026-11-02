@@ -2,12 +2,27 @@ import * as THREE from "three";
 
 const GROUND_SIZE = 20;
 
+// Buildings sit near the ground's edges so they frame the scenario
+// without blocking the view of the character in the middle.
+const BUILDING_LAYOUT = [
+  { x: -8, z: -8, width: 3, depth: 3, height: 5, color: 0xa3a3a3 },
+  { x: 8, z: -8, width: 3, depth: 4, height: 7, color: 0x8c8c99 },
+  { x: -8, z: 8, width: 4, depth: 3, height: 4, color: 0x9c8c7a },
+  { x: 8, z: 8, width: 3, depth: 3, height: 6, color: 0xa39080 },
+  { x: 0, z: -9, width: 4, depth: 2, height: 5, color: 0x8f9aa3 },
+  { x: 0, z: 9, width: 4, depth: 2, height: 5, color: 0x8f9aa3 },
+];
+
 export class World {
   constructor(scene) {
     this.group = new THREE.Group();
 
     this.group.add(this.#createGround());
     this.group.add(this.#createLights());
+
+    const { group: buildingsGroup, aabbs } = this.#createBuildings();
+    this.group.add(buildingsGroup);
+    this.buildings = aabbs;
 
     scene.add(this.group);
   }
@@ -21,6 +36,34 @@ export class World {
     ground.receiveShadow = true;
 
     return ground;
+  }
+
+  #createBuildings() {
+    const group = new THREE.Group();
+    const aabbs = [];
+
+    for (const building of BUILDING_LAYOUT) {
+      const { x, z, width, depth, height, color } = building;
+
+      const geometry = new THREE.BoxGeometry(width, height, depth);
+      const material = new THREE.MeshStandardMaterial({ color });
+      const mesh = new THREE.Mesh(geometry, material);
+
+      mesh.position.set(x, height / 2, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      group.add(mesh);
+
+      aabbs.push({
+        minX: x - width / 2,
+        maxX: x + width / 2,
+        minZ: z - depth / 2,
+        maxZ: z + depth / 2,
+      });
+    }
+
+    return { group, aabbs };
   }
 
   #createLights() {

@@ -70,7 +70,7 @@ export class Game {
   #tick() {
     const delta = this.clock.getDelta();
 
-    this.character.update(delta, this.input.getMoveVector());
+    this.character.update(delta, this.input.getMoveVector(), this.world.buildings);
     this.#updateCamera();
 
     this.renderer.render(this.scene, this.camera);

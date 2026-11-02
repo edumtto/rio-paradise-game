@@ -16,15 +16,31 @@ export class Character {
     scene.add(this.mesh);
   }
 
-  update(delta, moveVector) {
+  update(delta, moveVector, buildings = []) {
     if (moveVector.x === 0 && moveVector.z === 0) return;
 
     const limit = World.bounds - HALF_SIZE;
+    const { x, z } = this.mesh.position;
 
-    this.mesh.position.x += moveVector.x * MOVE_SPEED * delta;
-    this.mesh.position.z += moveVector.z * MOVE_SPEED * delta;
+    // Resolve each axis separately so the character slides along a
+    // building's wall instead of getting stuck when moving diagonally.
+    const nextX = THREE.MathUtils.clamp(x + moveVector.x * MOVE_SPEED * delta, -limit, limit);
+    if (!this.#collidesWithAny(nextX, z, buildings)) {
+      this.mesh.position.x = nextX;
+    }
 
-    this.mesh.position.x = THREE.MathUtils.clamp(this.mesh.position.x, -limit, limit);
-    this.mesh.position.z = THREE.MathUtils.clamp(this.mesh.position.z, -limit, limit);
+    const nextZ = THREE.MathUtils.clamp(z + moveVector.z * MOVE_SPEED * delta, -limit, limit);
+    if (!this.#collidesWithAny(this.mesh.position.x, nextZ, buildings)) {
+      this.mesh.position.z = nextZ;
+    }
+  }
+
+  #collidesWithAny(x, z, buildings) {
+    return buildings.some((box) =>
+      x + HALF_SIZE > box.minX &&
+      x - HALF_SIZE < box.maxX &&
+      z + HALF_SIZE > box.minZ &&
+      z - HALF_SIZE < box.maxZ
+    );
   }
 }
